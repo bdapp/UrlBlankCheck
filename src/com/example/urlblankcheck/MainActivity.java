@@ -1,9 +1,8 @@
 package com.example.urlblankcheck;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
-
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -15,11 +14,10 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.urlblankcheck.CheckHttpUrlEmpty.HttpUrlEmptyListener;
-
-public class MainActivity extends Activity implements OnClickListener, HttpUrlEmptyListener {
+public class MainActivity extends Activity implements OnClickListener {
 	private Context mContext;
 	private String TAG = "MainActivity";
 
@@ -27,10 +25,13 @@ public class MainActivity extends Activity implements OnClickListener, HttpUrlEm
 	private TextView mText;
 	private WebView mWebView;
 
+	private ProgressDialog loadingDialog;
+
 	private String openUrl;
-	
-	private Handler mHandler ;
-	
+
+	private Handler mHandler;
+	public static final int FALSECODE = 0;
+	public static final int TRUECODE = 1;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,14 +41,15 @@ public class MainActivity extends Activity implements OnClickListener, HttpUrlEm
 
 		initUi();
 
+		loadingDialog = showDialog(mContext);
+
 		mHandler = new MyHandler();
 	}
-	
-	
+
 	private void initUi() {
 		mEdit = (EditText) findViewById(R.id.url_edit);
 		mEdit.setText("http://www.baidu.com");
-		
+
 		mText = (TextView) findViewById(R.id.click_text);
 		mText.setOnClickListener(this);
 
@@ -68,16 +70,18 @@ public class MainActivity extends Activity implements OnClickListener, HttpUrlEm
 			public void onPageStarted(WebView view, String url, Bitmap favicon) {
 				// TODO Auto-generated method stub
 				super.onPageStarted(view, url, favicon);
+				loadingDialog.show();
 			}
 
 			@Override
 			public void onPageFinished(WebView view, String url) {
 				// TODO Auto-generated method stub
 				super.onPageFinished(view, url);
+				loadingDialog.cancel();
+				;
 			}
 
 		});
-		
 
 	}
 
@@ -86,8 +90,10 @@ public class MainActivity extends Activity implements OnClickListener, HttpUrlEm
 
 		switch (v.getId()) {
 		case R.id.click_text:
-			CheckConnectStatus check = new CheckConnectStatus(mHandler, mEdit.getText().toString());
-			
+			openUrl = mEdit.getText().toString().trim();
+			if (openUrl.length() > 0) {
+				new CheckConnectStatus(mHandler, openUrl);
+			}
 			break;
 
 		default:
@@ -95,56 +101,25 @@ public class MainActivity extends Activity implements OnClickListener, HttpUrlEm
 		}
 	}
 
-//	private void checkUrlIsExist(final String url) {
-//
-//		new Thread(new Runnable() {
-//
-//			@Override
-//			public void run() {
-//				try {
-//
-//					HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-//					int code = connection.getResponseCode();
-//					if (code == 200) {
-////						checkUrl(true);
-//						mHandler.sendEmptyMessage(1);
-//					} else {
-////						checkUrl(false);
-//						mHandler.sendEmptyMessage(0);
-//					}
-//
-//				} catch (Exception e) {
-//				}
-//			}
-//		}).start();
-//	}
-	
-	
+	private ProgressDialog showDialog(Context context) {
+		ProgressDialog dialog = new ProgressDialog(context);
+		dialog.setMessage("加载中...");
+		dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+		return dialog;
+	}
+
 	class MyHandler extends Handler {
 
 		@Override
 		public void handleMessage(Message msg) {
 			// TODO Auto-generated method stub
 			super.handleMessage(msg);
-			if (msg.what==CheckConnectStatus.FALSECODE) {
+			if (msg.what == FALSECODE) {
 				mWebView.loadUrl("");
-			} else if (msg.what==CheckConnectStatus.TRUECODE){
+			} else if (msg.what == TRUECODE) {
 				mWebView.loadUrl(openUrl);
 			}
-			
-		}
-		
-	}
 
-	
-
-	@Override
-	public void openHttpUrl(boolean b) {
-		// TODO Auto-generated method stub
-		if (b) {
-			mWebView.loadUrl(openUrl);
-		} else {
-			mWebView.loadUrl("");
 		}
 
 	}

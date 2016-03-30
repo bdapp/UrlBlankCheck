@@ -15,8 +15,7 @@ import android.os.Message;
  */
 public class CheckConnectStatus {
 
-	public static final int FALSECODE = 0;
-	public static final int TRUECODE = 1;
+	
 	public String url;
 	public Handler handler;
 	
@@ -31,9 +30,9 @@ public class CheckConnectStatus {
 					HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 					int code = connection.getResponseCode();
 					if (code == 200) {
-						handler.sendEmptyMessage(TRUECODE);
+						handler.sendEmptyMessage(MainActivity.TRUECODE);
 					} else {
-						handler.sendEmptyMessage(FALSECODE);
+						handler.sendEmptyMessage(MainActivity.FALSECODE);
 					}
 
 				} catch (Exception e) {
@@ -46,6 +45,7 @@ public class CheckConnectStatus {
 	public CheckConnectStatus(Handler handler, String url) {
 		this.handler = handler;
 		this.url = url;
+		checkUrlIsExist(url);
 	}
 }
   
